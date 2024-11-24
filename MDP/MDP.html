@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Mot de Passe</title>
+    <style>
+        /* Fond noir et texte vert pour l'effet hacker */
+        body {
+            background-color: black;
+            color: #00FF00; /* Texte vert pour l'effet hacker */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 20px;
+            margin: 0;
+            overflow: hidden; /* Empêche les barres de défilement */
+            height: 100vh;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Zone centrale avec fond blanc et texte noir */
+        .container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff; /* Fond blanc sans transparence */
+            color: black;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 380px;
+            z-index: 10; /* S'assure que la zone du générateur reste au-dessus du texte défilant */
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-size: 16px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input[type="number"],
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        #motdepasse {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+            word-wrap: break-word;
+            color: #333;
+        }
+
+        .security-bar {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        #security-level {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #explanation {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Conteneur du texte défilant dans le fond */
+        .scrolling-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: #00FF00; /* Texte vert */
+            font-size: 24px; /* Texte plus grand */
+            font-family: 'Courier New', Courier, monospace;
+            white-space: nowrap;
+            z-index: 1;
+            animation: scrollingText 60s linear infinite; /* Défilement plus lent */
+        }
+
+        /* Animation du texte qui défile lentement vers le bas */
+        @keyframes scrollingText {
+            0% {
+                top: -100%; /* Commence au-dessus de l'écran */
+            }
+            100% {
+                top: 100%; /* Descend en bas de l'écran */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Texte défilant dans le fond -->
+    <div id="scrollingText" class="scrolling-text"></div>
+
+    <div class="container">
+        <h1>Générateur de Mot de Passe</h1>
+        
+        <!-- Saisie de la longueur du mot de passe -->
+        <div class="input-group">
+            <label for="longueur">Longueur du mot de passe :</label>
+            <input type="number" id="longueur" value="12" min="6" max="20" onchange="genererMotDePasse()">
+        </div>
+        
+        <!-- Choix des caractères à inclure -->
+        <div class="input-group">
+            <label><input type="checkbox" id="lettres" onchange="genererMotDePasse()"> Lettres (Majuscules et Minuscules)</label><br>
+            <label><input type="checkbox" id="nombres" onchange="genererMotDePasse()"> Nombres</label><br>
+            <label><input type="checkbox" id="speciaux" onchange="genererMotDePasse()"> Caractères spéciaux</label><br>
+        </div>
+        
+        <!-- Barre de sécurité -->
+        <div class="security-bar">
+            <label for="security">Sécurité du mot de passe :</label><br>
+            <progress id="security" value="1" max="5" style="width: 100%;"></progress>
+            <div id="security-level">Sécurité : 1/5</div>
+        </div>
+        
+        <button onclick="genererMotDePasse()">Générer</button>
+        <div id="motdepasse"></div>
+        <div id="explanation"></div>
+    </div>
+
+    <script>
+        // Fonction pour générer un mot de passe aléatoire
+        function genererMotDePasseAleatoire() {
+            const longueur = 12; // Longueur fixe pour les mots de passe du fond
+            const caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+            let motDePasse = "";
+            for (let i = 0; i < longueur; i++) {
+                motDePasse += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+            return motDePasse;
+        }
+
+        // Fonction pour mettre à jour le texte défilant avec plusieurs mots de passe
+        function updateScrollingText() {
+            const scrollingTextElement = document.getElementById('scrollingText');
+            const numberOfPasswords = Math.floor(window.innerHeight / 24); // Nombre de lignes qui peuvent tenir sur l'écran (plus de lignes)
+            let textContent = '';
+
+            // Générer plusieurs mots de passe et les afficher sur plusieurs lignes
+            for (let i = 0; i < numberOfPasswords; i++) {
+                let lineContent = '';
+                // Générer une ligne de caractères changeants
+                for (let j = 0; j < window.innerWidth / 20; j++) {
+                    lineContent += getRandomCharacter();
+                }
+                textContent += lineContent + '<br>';
+            }
+
+            scrollingTextElement.innerHTML = textContent;
+        }
+
+        // Fonction pour obtenir un caractère aléatoire parmi une liste
+        function getRandomCharacter() {
+            const caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+            return caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+        }
+
+        // Mettre à jour le texte du fond à intervalles réguliers
+        setInterval(updateScrollingText, 100); // Mettre à jour moins fréquemment pour un défilement plus lent
+
+        // Fonction pour générer un mot de passe aléatoire
+        function genererMotDePasse() {
+            const longueur = document.getElementById("longueur").value;
+            const utiliserLettres = document.getElementById("lettres").checked;
+            const utiliserNombres = document.getElementById("nombres").checked;
+            const utiliserSpeciaux = document.getElementById("speciaux").checked;
+
+            // Définir les ensembles de caractères en fonction des choix
+            let caracteres = "";
+            if (utiliserLettres) caracteres += "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            if (utiliserNombres) caracteres += "0123456789";
+            if (utiliserSpeciaux) caracteres += "!@#$%^&*()_+[]{}|;:,.<>?";
+            
+            if (caracteres === "") {
+                document.getElementById("motdepasse").textContent = "Sélectionnez au moins un type de caractère.";
+                return;
+            }
+
+            let motDePasse = "";
+            for (let i = 0; i < longueur; i++) {
+                motDePasse += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+
+            // Afficher le mot de passe généré
+            document.getElementById("motdepasse").textContent = motDePasse;
+
+            // Calculer la sécurité du mot de passe
+            let niveauSecurite = 1;
+            
+            // Sécurité basée sur la longueur
+            if (longueur >= 10) {
+                niveauSecurite += 2; // Longueur élevée = bonus de 2
+            } else if (longueur >= 6) {
+                niveauSecurite += 1; // Longueur moyenne = bonus de 1
+            }
+
+            // Sécurité basée sur les types de caractères
+            if (utiliserLettres && utiliserNombres && utiliserSpeciaux) {
+                niveauSecurite += 2;  // Tous les types = bonus de 2
+            } else if ((utiliserLettres && utiliserNombres) || (utiliserLettres && utiliserSpeciaux) || (utiliserNombres && utiliserSpeciaux)) {
+                niveauSecurite += 1;  // Deux types de caractères = bonus de 1
+            }
+
+            // Limiter le niveau de sécurité à 5
+            if (niveauSecurite > 5) {
+                niveauSecurite = 5;
+            }
+
+            // Mettre à jour la barre de sécurité
+            document.getElementById("security").value = niveauSecurite;
+            document.getElementById("security-level").textContent = `Sécurité : ${niveauSecurite}/5`;
+
+            // Mettre à jour l'explication
+            expliquerSecurite(niveauSecurite);
+        }
+
+        function expliquerSecurite(niveau) {
+            let explanation = "";
+
+            switch (niveau) {
+                case 5:
+                    explanation = "Très sécurisé ! Vous avez utilisé une combinaison de lettres, de nombres et de caractères spéciaux avec une longueur élevée.";
+                    break;
+                case 4:
+                    explanation = "Sécurisé. Vous avez utilisé plusieurs types de caractères et une longueur suffisante.";
+                    break;
+                case 3:
+                    explanation = "Sécurisé mais pas optimal. Vous avez ajouté quelques caractères spéciaux ou des nombres.";
+                    break;
+                case 2:
+                    explanation = "Moins sécurisé. Il manque certains types de caractères pour renforcer la sécurité.";
+                    break;
+                case 1:
+                    explanation = "Faible sécurité. Il est conseillé d'ajouter plus de types de caractères et d'augmenter la longueur.";
+                    break;
+                default:
+                    explanation = "Erreur dans le calcul de la sécurité.";
+            }
+
+            document.getElementById("explanation").textContent = explanation;
+        }
+    </script>
+
+</body>
+</html>
